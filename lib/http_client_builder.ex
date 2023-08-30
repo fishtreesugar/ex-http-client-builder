@@ -118,7 +118,7 @@ defmodule HttpClientBuilder do
       defp dedup_headers(headers) do
         headers
         |> Enum.reduce(%{}, fn {k, v}, acc -> Map.put(acc, k, v) end)
-        |> Enum.map(fn {k, v} -> {k, v} end)
+        |> Map.to_list()
       end
 
       defoverridable get: 2, post: 2, put: 2, delete: 2, patch: 2, do_request: 3, build_url: 2

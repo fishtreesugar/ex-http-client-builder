@@ -96,7 +96,8 @@ defmodule HttpClientBuilder do
 
         headers =
           if unquote(client_opts)[:runtime_headers_getter] do
-            unquote(client_opts)[:runtime_headers_getter].() ++ compile_time_headers
+            (unquote(client_opts)[:runtime_headers_getter].() ++ compile_time_headers)
+            |> dedup_headers()
           else
             compile_time_headers
           end
@@ -112,6 +113,12 @@ defmodule HttpClientBuilder do
         query = if is_nil(params), do: "", else: "?" <> Plug.Conn.Query.encode(params)
 
         base_url <> url_or_path <> query
+      end
+
+      defp dedup_headers(headers) do
+        headers
+        |> Enum.reduce(%{}, fn {k, v}, acc -> Map.put(acc, k, v) end)
+        |> Map.to_list()
       end
 
       defoverridable get: 2, post: 2, put: 2, delete: 2, patch: 2, do_request: 3, build_url: 2

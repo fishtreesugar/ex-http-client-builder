@@ -38,6 +38,8 @@ defmodule HttpClientBuilder do
         raise ":runtime_headers_getter option is not a nullary anonymous function or function capture "
     end
 
+    otel_headers? = Keyword.get(client_opts, :otel_headers?, true)
+
     quote do
       def child_spec(opts) do
         default_pools = %{:default => [size: 50]}
@@ -102,6 +104,8 @@ defmodule HttpClientBuilder do
             compile_time_headers
           end
 
+        headers = otel_headers(headers)
+
         method
         |> Finch.build(url, headers, body)
         |> Finch.request(__MODULE__, request_opts)
@@ -120,6 +124,15 @@ defmodule HttpClientBuilder do
         |> Enum.reduce(%{}, fn {k, v}, acc -> Map.put(acc, k, v) end)
         |> Map.to_list()
       end
+
+      # https://github.com/open-telemetry/opentelemetry-erlang-contrib/blob/main/instrumentation/opentelemetry_finch/README.md
+      if Code.ensure_loaded?(:otel_propagator_text_map) && unquote(otel_headers?) do
+        defp otel_headers(headers) when is_list(headers) do
+          :otel_propagator_text_map.inject([]) ++ headers
+        end
+      end
+
+      defp otel_headers(headers), do: headers
 
       defoverridable get: 2, post: 2, put: 2, delete: 2, patch: 2, do_request: 3, build_url: 2
     end

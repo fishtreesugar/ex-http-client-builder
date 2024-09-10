@@ -27,6 +27,7 @@ defmodule HttpClientBuilder.MixProject do
       {:finch, "~> 0.9"},
       # for encode plug compat query string
       {:plug, "~> 1.12"},
+      {:opentelemetry_api, "~> 1.3", optional: true},
       {:jason, "~> 1.2", only: [:test]}
     ]
   end
